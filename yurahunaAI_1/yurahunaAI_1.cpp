@@ -118,10 +118,10 @@ int main() {
             if (i != 0) {
                 cin >> punter_id >> u >> v;
             }
-            u = siteId2idx[u];
-            v = siteId2idx[v];
             assert((u == -1 && v == -1) || (u != -1 && v != -1));
             if (u == -1 && v == -1) continue;
+            u = siteId2idx[u];
+            v = siteId2idx[v];
             if (u >= v) swap(u, v);
             edge2punter[make_pair(u, v)] = punter_id;
             assert(edges_unused.count(make_pair(u, v)) == 1);
