@@ -4,8 +4,6 @@ import json
 import socket
 from subprocess import PIPE, Popen
 
-import attr
-
 from model import *
 
 NAME = 'Lawson Takayama Science Town'
@@ -173,17 +171,17 @@ def main():
     handshake(client)
     setup_model = setup(client)
     setup_stdin = setup_model_to_stdin(setup_model)
-    proc.stdin.write(setup_stdin.encode('UTF-8'))
+    proc.stdin.write(setup_stdin.encode('ascii'))
     proc.stdin.flush()
     while True:
         cont, pull_model = pull(client)
         if not cont:
             print(pull_model)
-            proc.stdin.write('-1 -1 -1\n'.encode('UTF-8'))
+            proc.stdin.write('-1 -1 -1\n'.encode('ascii'))
             proc.terminate()
             break
         pull_stdin = pull_model_to_stdin(pull_model)
-        proc.stdin.write(pull_stdin.encode('UTF-8'))
+        proc.stdin.write(pull_stdin.encode('ascii'))
         proc.stdin.flush()
         output = proc.stdout.readline()
         push(client, parse_output(output))
