@@ -1,5 +1,29 @@
 # ICFPC 2017
 
+## 必要なもの
+
+* Python3系
+
+## セットアップ方法
+
+Anaconda / Miniconda を使っている人
+
+```
+$ conda install attrs
+```
+
+使っていない人
+
+```
+$ pip install attrs
+```
+
+## AIを作る人がやること
+
+1. 標準入出力仕様書の通りに入力がやってくるので，stdin/stdoutを通してそれを処理するAIを書く
+2. `python communication/compare.py AIの実行ファイルのパス1 AIの実行ファイルのパス2` で40回対戦を行う
+3. 勝率が6割を超えていたら，90%の確率でそっちのほうが強いと言える
+
 ## 標準入出力仕様書
 
 setup -> pull -> push -> pull -> push -> pull -> push ...
