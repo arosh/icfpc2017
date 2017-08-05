@@ -35,7 +35,7 @@ class Client:
         if not isinstance(msg, bytes):
             msg = bytes(msg, encoding='ascii')
         self.sock.sendall(msg)
-        self.logger.info('[send] %s' % msg)
+        self.logger.info('[send] %s' % msg.decode('ascii'))
 
     def sendjson(self, msg):
         import json
@@ -45,7 +45,6 @@ class Client:
     def recv(self):
         # データサイズは9桁以下なので，':'も考慮して10より大きい最小の2ベキを設定
         data = self.sock.recv(16)
-        # self.logger.info('[recv] %s' % data)
         # 最初の':'で区切る
         split = data.decode('ascii').split(':', maxsplit=1)
         # データサイズ
@@ -56,13 +55,12 @@ class Client:
         total = len(chunk)
         while total < msglen:
             chunk = self.sock.recv(min(4048, msglen - total))
-            # self.logger.info('[recv] %s' % chunk)
             if len(chunk) == 0:
                 raise RuntimeError('socket connection broken')
             chunks.append(chunk)
             total += len(chunk)
         msg = b''.join(chunks)
-        self.logger.info('[recv] %s' % msg)
+        self.logger.info('[recv] %d:%s' % (msglen, msg.decode('ascii').rstrip()))
         return msg
 
     def recvjson(self):
@@ -109,10 +107,8 @@ def parse_move(move):
             target=move['claim']['target'])
     return model
 
-# (continue, model)
-
-
 def pull(client):
+    # (continue, model)
     recv = client.recvjson()
     # scoring
     if 'stop' in recv:
@@ -178,20 +174,15 @@ def main():
     proc.stdin.flush()
     while True:
         cont, pull_model = pull(client)
-        print('pull(client)')
         if not cont:
+            print(pull_model)
             proc.stdin.write('-1 -1 -1\n'.encode('UTF-8'))
             proc.terminate()
             break
         pull_stdin = pull_model_to_stdin(pull_model)
         proc.stdin.write(pull_stdin.encode('UTF-8'))
         proc.stdin.flush()
-        print('write()')
-        print(pull_stdin)
-        print('readline() start')
         output = proc.stdout.readline()
-        print('readline() end')
-        print('output =', output)
         push(client, parse_output(output))
 
 if __name__ == '__main__':
