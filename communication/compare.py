@@ -4,6 +4,7 @@ import json
 from subprocess import PIPE, Popen
 import itertools
 from tqdm import tqdm
+import random
 
 from model import *
 from online import getLogger, setup_model_to_stdin, pull_model_to_stdin, parse_output
@@ -101,13 +102,19 @@ def run(solvers):
 
 def main(solvers):
     winnings = [0] * len(solvers)
+    shuffle = []
+    for i, name in enumerate(solvers):
+        shuffle.append((i, name))
     for i in tqdm(range(40)):
-        scores = run(solvers)
-        winnings[scores.index(max(scores))] += 1
+        random.shuffle(shuffle)
+        names = [x[1] for x in shuffle]
+        scores = run(names)
+        winnings[shuffle[scores.index(max(scores))][0]] += 1
     for i in range(len(solvers)):
         print(solvers[i], winnings[i] / 40)
 
 if __name__ == '__main__':
+    random.seed(0)
     parser = argparse.ArgumentParser()
     parser.add_argument('solvers', nargs='+')
     args = parser.parse_args()
