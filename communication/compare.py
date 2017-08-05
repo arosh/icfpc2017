@@ -28,10 +28,11 @@ class Server:
 
     def pushMove(self, move):
         self.lastMove[self.punter] = move
-        for x in self.history:
-            a, b = min(x.source, x.target), max(x.source, x.target)
-            c, d = min(move.source, move.target), max(move.source, move.target)
-            assert not (a == c and b == d)
+        if not (move.source == -1 and move.target == -1):
+            for x in self.history:
+                a, b = min(x.source, x.target), max(x.source, x.target)
+                c, d = min(move.source, move.target), max(move.source, move.target)
+                assert not (a == c and b == d)
         self.history.append(move)
 
 def setup(server):
