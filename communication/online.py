@@ -7,7 +7,7 @@ from model import *
 
 HOST = 'punter.inf.ed.ac.uk'
 # 9001 - 9240
-PORT = 9001
+PORT = 9121
 NAME = 'Lawson Takayama Science Town'
 CMD = './solver'
 
@@ -19,15 +19,16 @@ def getLogger(name):
     handler.setFormatter(formatter)
     logger = logging.getLogger(name)
     logger.addHandler(handler)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     return logger
 
 class Client:
     def __init__(self):
         # https://docs.python.jp/3/howto/sockets.html
         self.sock = socket.socket()
-        self.sock.connect((HOST, PORT))
         self.logger = getLogger('socket')
+        self.logger.info('[connect] start')
+        self.sock.connect((HOST, PORT))
         self.logger.info('[connect] %s:%s' % (HOST, PORT))
 
     def send(self, msg):
@@ -44,6 +45,7 @@ class Client:
     def recv(self):
         # データサイズは9桁以下なので，':'も考慮して10より大きい最小の2ベキを設定
         data = self.sock.recv(16)
+        # self.logger.info('[recv] %s' % data)
         # 最初の':'で区切る
         split = data.decode('ascii').split(':', maxsplit=1)
         # データサイズ
@@ -54,12 +56,14 @@ class Client:
         total = len(chunk)
         while total < msglen:
             chunk = self.sock.recv(min(4048, msglen - total))
+            # self.logger.info('[recv] %s' % chunk)
             if len(chunk) == 0:
                 raise RuntimeError('socket connection broken')
             chunks.append(chunk)
             total += len(chunk)
         msg = b''.join(chunks)
         self.logger.info('[recv] %s' % msg)
+        return msg
 
     def recvjson(self):
         recv = self.recv()
@@ -148,15 +152,15 @@ def setup_model_to_stdin(model):
     with io.StringIO() as f:
         print('%d %d %d %d %d' % (model.n, model.p, len(model.sites),
                                   len(model.mines), len(model.rivers)), file=f)
-        print(' '.join(model.sites), file=f)
-        print(' '.join(model.mines), file=f)
+        print(' '.join(map(str, model.sites)), file=f)
+        print(' '.join(map(str, model.mines)), file=f)
         for river in model.rivers:
             print('%d %d' % (river.source, river.target), file=f)
         return f.getvalue()
 
 def pull_model_to_stdin(model):
     with io.StringIO() as f:
-        for move in moves:
+        for move in model.moves:
             print('%d %d %d' % (move.punter, move.source, move.target), file=f)
         return f.getvalue()
 
@@ -165,19 +169,29 @@ def parse_output(output):
     return MoveModel(punter=punter, source=source, target=target)
 
 def main():
-    proc = Popen(CMD, stdin=PIPE, stdout=PIPE)
     client = Client()
+    proc = Popen(CMD, stdin=PIPE, stdout=PIPE)
     handshake(client)
     setup_model = setup(client)
     setup_stdin = setup_model_to_stdin(setup_model)
-    proc.communicate(setup_stdin.encode('UTF-8'))
+    proc.stdin.write(setup_stdin.encode('UTF-8'))
+    proc.stdin.flush()
     while True:
         cont, pull_model = pull(client)
+        print('pull(client)')
         if not cont:
-            proc.communicate('-1 -1 -1\n'.encode('UTF-8'))
+            proc.stdin.write('-1 -1 -1\n'.encode('UTF-8'))
+            proc.terminate()
             break
         pull_stdin = pull_model_to_stdin(pull_model)
-        output = proc.communicate(pull_stdin.encode('UTF-8'))[0].decode('UTF-8')
+        proc.stdin.write(pull_stdin.encode('UTF-8'))
+        proc.stdin.flush()
+        print('write()')
+        print(pull_stdin)
+        print('readline() start')
+        output = proc.stdout.readline()
+        print('readline() end')
+        print('output =', output)
         push(client, parse_output(output))
 
 if __name__ == '__main__':
