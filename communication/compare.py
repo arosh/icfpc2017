@@ -79,6 +79,9 @@ def evaluate(server):
     scores = proc.stdout.readline()
     proc.terminate()
     scores = list(map(int, scores.split()))
+    if len(scores) == 0:
+        print(output)
+        assert len(scores) > 0
     return scores
 
 def run(solvers):
@@ -111,13 +114,13 @@ def main(solvers):
     shuffle = []
     for i, name in enumerate(solvers):
         shuffle.append((i, name))
-    for i in tqdm(range(40)):
+    for i in tqdm(range(60)):
         random.shuffle(shuffle)
         names = [x[1] for x in shuffle]
         scores = run(names)
         winnings[shuffle[scores.index(max(scores))][0]] += 1
     for i in range(len(solvers)):
-        print(solvers[i], winnings[i] / 40)
+        print(solvers[i], winnings[i] / 60)
 
 if __name__ == '__main__':
     random.seed(0)
