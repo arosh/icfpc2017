@@ -65,6 +65,8 @@ int main() {
             if (i != 0) {
                 cin >> punter_id >> u >> v;
             }
+            assert((u == -1 && v == -1) || (u != -1 && v != -1));
+            if (u == -1 && v == -1) continue;
             u = siteId2idx[u];
             v = siteId2idx[v];
             if (u >= v) swap(u, v);
