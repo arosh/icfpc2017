@@ -9,13 +9,14 @@
 Anaconda / Miniconda を使っている人
 
 ```
-$ conda install attrs
+$ conda install attrs tqdm
+$ pip install better_exceptions
 ```
 
 使っていない人
 
 ```
-$ pip install attrs
+$ pip install attrs tqdm better_exceptions
 ```
 
 ## AIを作る人がやること

@@ -5,6 +5,7 @@ from subprocess import PIPE, Popen
 import itertools
 from tqdm import tqdm
 import random
+import better_exceptions
 
 from model import *
 from online import getLogger, setup_model_to_stdin, pull_model_to_stdin, parse_output
@@ -27,6 +28,10 @@ class Server:
 
     def pushMove(self, move):
         self.lastMove[self.punter] = move
+        for x in self.history:
+            a, b = min(x.source, x.target), max(x.source, x.target)
+            c, d = min(move.source, move.target), max(move.source, move.target)
+            assert not (a == c and b == d)
         self.history.append(move)
 
 def setup(server):
