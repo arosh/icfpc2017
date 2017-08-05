@@ -11,8 +11,7 @@ from model import *
 from online import getLogger, setup_model_to_stdin, pull_model_to_stdin, parse_output
 
 class Server:
-    def __init__(self, n):
-        filename = 'maps/sample.json'
+    def __init__(self, n, filename):
         with open(filename) as f:
             self.graph = json.load(f)
         self.punters = n
@@ -84,8 +83,8 @@ def evaluate(server):
         assert len(scores) > 0
     return scores
 
-def run(solvers):
-    server = Server(len(solvers))
+def run(filename, solvers):
+    server = Server(len(solvers), filename)
     procs = []
     for i in range(len(solvers)):
         procs.append(Popen(solvers[i], stdin=PIPE, stdout=PIPE))
@@ -109,7 +108,7 @@ def run(solvers):
 
     return evaluate(server)
 
-def main(solvers):
+def main(filename, solvers):
     winnings = [0] * len(solvers)
     shuffle = []
     for i, name in enumerate(solvers):
@@ -117,7 +116,7 @@ def main(solvers):
     for i in tqdm(range(60)):
         random.shuffle(shuffle)
         names = [x[1] for x in shuffle]
-        scores = run(names)
+        scores = run(filename, names)
         winnings[shuffle[scores.index(max(scores))][0]] += 1
     for i in range(len(solvers)):
         print(solvers[i], winnings[i] / 60)
@@ -125,6 +124,7 @@ def main(solvers):
 if __name__ == '__main__':
     random.seed(0)
     parser = argparse.ArgumentParser()
+    parser.add_argument('--map', dest='filename', default='maps/sample.json')
     parser.add_argument('solvers', nargs='+')
     args = parser.parse_args()
-    main(args.solvers)
+    main(args.filename, args.solvers)
