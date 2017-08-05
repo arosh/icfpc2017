@@ -1,3 +1,6 @@
 *.dSYM
 __pycache__
 .ipynb_checkpoints
+randomAI/randomAI
+yurahunaAI_1/yurahunaAI_1
+yurahunaAI_2/yurahunaAI_2

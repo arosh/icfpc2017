@@ -1,15 +1,18 @@
-import socket
-import json
-import attr
+import argparse
 import io
+import json
+import socket
 from subprocess import PIPE, Popen
+
+import attr
+
 from model import *
 
+NAME = 'Lawson Takayama Science Town'
 HOST = 'punter.inf.ed.ac.uk'
 # 9001 - 9240
-PORT = 9121
-NAME = 'Lawson Takayama Science Town'
-CMD = './solver'
+PORT = None
+SOLVER = None
 
 def getLogger(name):
     # https://gist.github.com/arosh/d3582de637db8ec057b8
@@ -166,7 +169,7 @@ def parse_output(output):
 
 def main():
     client = Client()
-    proc = Popen(CMD, stdin=PIPE, stdout=PIPE)
+    proc = Popen(SOLVER, stdin=PIPE, stdout=PIPE)
     handshake(client)
     setup_model = setup(client)
     setup_stdin = setup_model_to_stdin(setup_model)
@@ -186,4 +189,10 @@ def main():
         push(client, parse_output(output))
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('PORT', type=int)
+    parser.add_argument('SOLVER', type=str)
+    args = parser.parse_args()
+    PORT = args.PORT
+    SOLVER = args.SOLVER
     main()
