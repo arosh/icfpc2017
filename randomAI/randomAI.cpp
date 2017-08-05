@@ -84,6 +84,7 @@ int main() {
         u = sites[u];
         v = sites[v];
         cout << my_punter_id << " " << u << " " << v << endl;
+        // cerr << my_punter_id << " " << u << " " << v << endl;
     }
 
 }

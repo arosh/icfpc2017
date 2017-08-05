@@ -127,6 +127,7 @@ void play(UnionFind& uf) {
             u = sites[u];
             v = sites[v];
             cout << my_punter_id << " " << u << " " << v << endl;
+            // cerr << my_punter_id << " " << u << " " << v << endl;
             uf.unite(u, v);
             return ;
         }
@@ -134,6 +135,8 @@ void play(UnionFind& uf) {
     // cerr << "not found argumenting edge" << endl;
     // スコアを増やせる辺がなかったら pass
     cout << my_punter_id << " " << -1 << " " << -1 << endl;
+    // cerr << my_punter_id << " " << -1 << " " << -1 << endl;
+
 }
 
 int main() {

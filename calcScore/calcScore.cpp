@@ -48,6 +48,8 @@ void setup() {
     rep(i, R) {
         int punter_id, u, v;
         cin >> punter_id >> u >> v;
+        assert((u == -1 && v == -1) || (u != -1 && v != -1));
+        if (u == -1 && v == -1) continue;
         u = siteId2idx[u];
         v = siteId2idx[v];
         assert(edge2punter.count(make_pair(u, v)) == 0);

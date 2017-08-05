@@ -121,8 +121,8 @@ void play(UnionFind& uf) {
             if (uf.same(from, to)) continue;
             int u = from, v = to;
             if (u >= v) swap(u, v);
-            if (!edges_unused.count(make_pair(u, v)) || edge2punter[make_pair(u, v)] != my_punter_id) {
-                // 他のパンターに取られた辺だったら continue
+            if (!edges_unused.count(make_pair(u, v))) {
+                // 既に使われている辺は取れない
                 continue;
             }
 
@@ -135,6 +135,7 @@ void play(UnionFind& uf) {
                 if (!uf.same(from, mines[i])) continue;
                 rep(v, S) {
                     if (!uf.same(to, v)) continue;
+                    assert(dd[i][v] != -1);
                     score += (long long)dd[i][v] * dd[i][v];
                 }
             }
@@ -142,6 +143,7 @@ void play(UnionFind& uf) {
                 if (!uf.same(to, mines[i])) continue;
                 rep(v, S) {
                     if (!uf.same(from, v)) continue;
+                    assert(dd[i][v] != -1);
                     score += (long long)dd[i][v] * dd[i][v];
                 }
             }
@@ -159,11 +161,13 @@ void play(UnionFind& uf) {
         arg_u = sites[arg_u];
         arg_v = sites[arg_v];
         cout << my_punter_id << " " << arg_u << " " << arg_v << endl;
+        // cerr << my_punter_id << " " << arg_u << " " << arg_v << endl;
         return ;
     }
 
     // スコアを増やせる辺がなかったら pass
     cout << my_punter_id << " " << -1 << " " << -1 << endl;
+    // cerr << my_punter_id << " " << -1 << " " << -1 << endl;
 }
 
 int main() {
