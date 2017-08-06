@@ -158,6 +158,7 @@ void play(UnionFind& uf) {
     }
 
     if (ma_score > 0) {
+        uf.unite(arg_u, arg_v);
         arg_u = sites[arg_u];
         arg_v = sites[arg_v];
         cout << my_punter_id << " " << arg_u << " " << arg_v << endl;
