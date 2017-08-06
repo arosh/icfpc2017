@@ -9,6 +9,7 @@
 using namespace std;
 
 #define rep(i,n) for (int i=0;i<(n);i++)
+const int INF = 1e9;
 
 using Graph = vector<vector<int>>;
 using Edge = pair<int,int>;
@@ -170,31 +171,65 @@ vector<vector<int>> calcDownwardsAll() {
     return downwards;
 }
 
-void answer(int my_punter_id, int u, int v) {
+void answer(int my_punter_id, int u, int v, UnionFind& uf) {
+    uf.unite(u, v);
+    if (u >= v) swap(u, v);
     u = sites[u];
     v = sites[v];
     cout << my_punter_id << " " << u << " " << v << endl;
+    // cerr << my_punter_id << " " << u << " " << v << endl;
 }
 
-// 未接続の鉱山のうち、接続する辺が (次数) * EDGE_RATIO 本以上取られているものがあれば、その鉱山に隣接する辺を採用
-// なければ、スコアの増分が最大である辺を採用
-// 複数ある場合、最短経路DAGにおいて自身から到達可能な頂点数が最大であるような頂点に向かう辺を採用
+// 先に各鉱山から 1 本ずつ辺を生やしておく
+// その後はスコアの増分が最大となる辺を貪欲に採用
+// スコアの増分を最大にする辺が複数ある場合、最短経路DAGにおいて自身から到達可能な頂点数が最大であるような頂点に向かう辺を採用
 void play(UnionFind& uf) {
     long long ma_score = 0ll;
     int ma_down = 0;
     int arg_u, arg_v;
 
-    for (auto u : mines) {
+    auto downwards = calcDownwardsAll();
+
+    // 残り次数の小さい鉱山を優先
+    int mi_rem_deg = INF;
+    int arg_mine_id = -1;
+    rep(mine_id, M) {
+        int u = mines[mine_id];
+        int rem_deg = 0;
         for (auto v : G[u]) {
             Edge e(min(u, v), max(u, v));
             if (edges_unused.count(e)) {
-                answer(my_punter_id, e.first, e.second);
-                return ;
+                rem_deg++;
+            }
+            else if (edge2punter[e] == my_punter_id) {
+                // 自分が既にこの鉱山に接続する辺を採用していたら、この鉱山は無視
+                rem_deg = -INF;
             }
         }
+        if (rem_deg > 0 && mi_rem_deg > rem_deg) {
+            mi_rem_deg = rem_deg;
+            arg_mine_id = mine_id;
+        }
     }
+    // cerr << mi_rem_deg << " " << arg_mine_id << endl;
 
-    auto downwards = calcDownwardsAll();
+    // 選んだ鉱山に接続する辺のうち、downward が最大の頂点に向かう辺を採用
+    if (mi_rem_deg != INF) {
+        int u = mines[arg_mine_id];
+        arg_u = u;
+        for (auto v : G[u]) {
+            Edge e(min(u, v), max(u, v));
+            if (edges_unused.count(e)) {
+                if (ma_down < downwards[arg_mine_id][v]) {
+                    ma_down = downwards[arg_mine_id][v];
+                    arg_v = v;
+                }
+            }
+        }
+        assert(ma_down > 0);
+        answer(my_punter_id, arg_u, arg_v, uf);
+        return ;
+    }
 
     rep(from, S) {
         if (!containsMine(uf, from)) continue;
@@ -251,10 +286,11 @@ void play(UnionFind& uf) {
     }
 
     if (ma_score > 0) {
-        arg_u = sites[arg_u];
-        arg_v = sites[arg_v];
-        cout << my_punter_id << " " << arg_u << " " << arg_v << endl;
+        // arg_u = sites[arg_u];
+        // arg_v = sites[arg_v];
+        // cout << my_punter_id << " " << arg_u << " " << arg_v << endl;
         // cerr << my_punter_id << " " << arg_u << " " << arg_v << endl;
+        answer(my_punter_id, arg_u, arg_v, uf);
         return ;
     }
 
@@ -264,9 +300,10 @@ void play(UnionFind& uf) {
     vector<Edge> edges_unused_vec(edges_unused.begin(), edges_unused.end());
     int u, v;
     tie(u, v) = edges_unused_vec[edge_id];
-    u = sites[u];
-    v = sites[v];
-    cout << my_punter_id << " " << u << " " << v << endl;
+    // u = sites[u];
+    // v = sites[v];
+    // cout << my_punter_id << " " << u << " " << v << endl;
+    answer(my_punter_id, u, v, uf);
     // cerr << my_punter_id << " " << u << " " << v << endl;
     // cout << my_punter_id << " " << -1 << " " << -1 << endl;
     // cerr << my_punter_id << " " << -1 << " " << -1 << endl;
