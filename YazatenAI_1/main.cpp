@@ -1,4 +1,12 @@
-#include "bits/stdc++.h"
+#include <iostream>
+#include <vector>
+#include <map>
+#include <set>
+#include <algorithm>
+#include <cassert>
+#include <queue>
+#include <stack>
+
 using namespace std;
 typedef long long ll;
 typedef pair<int,int> pii;
@@ -11,23 +19,23 @@ using Graph = vector<vector<int>>;
 using Edge = pair<int,int>;
 
 Graph G;
-map<Edge, int> edge2punter;
 
-void setup(int &num_of_punter, int &my_punter_id, vector<int> &sites, map<int,int> &zip, vector<int> &mines, set<Edge> &edges_unused) {
+
+void setup(int &num_of_punter, int &my_punter_id, vector<int> &raw_sites, map<int,int> &zip, map<int,int> &unzip, vector<int> &raw_mines, set<Edge> &edges_unused) {
     int S, M, R;
     cin >> num_of_punter >> my_punter_id >> S >> M >> R;
     
-    sites.resize(S);
+    raw_sites.resize(S);
+    raw_mines.resize(M);
+    rep(i, S) cin >> raw_sites[i];
+    rep(i, M) cin >> raw_mines[i];
     rep(i, S) {
-        cin >> sites[i];
-        zip[sites[i]] = i;
+        zip[raw_sites[i]] = i;
+        unzip[i] = raw_sites[i];
     }
-    mines.resize(M);
-    rep(i, M) {
-        cin >> mines[i];
-        mines[i] = zip[mines[i]];
-    }
-    sort(mines.begin(), mines.end());
+    
+    sort(raw_mines.begin(), raw_mines.end());
+    
     G.resize(S);
     rep(i, R) {
         int u, v;
@@ -42,6 +50,7 @@ void setup(int &num_of_punter, int &my_punter_id, vector<int> &sites, map<int,in
         edges_unused.emplace(u, v);
     }
 }
+
 
 vector<int> shortestDistanceOne(int s) {
     int n = G.size();
@@ -60,87 +69,110 @@ vector<int> shortestDistanceOne(int s) {
     return d;
 }
 
-pii get_fartherst_set(const vector<vector<int>> &ds, const vector<int> &mines, map<int,int> &zip, const int &upper){
+
+pii get_fartherst_set(const vector<vector<int>> &ds, const vector<int> &raw_mines, map<int,int> &zip, const int &upper){
     int max_dist = 0;
     pii max_ind = pii(0,0);
     
-    for(const auto &mine:mines){
+    for(const auto &raw_mine:raw_mines){
         if( max_dist>=upper )return max_ind;
         
-        vector<int> vec = ds[ zip[mine] ];
+        vector<int> vec = ds[ zip[raw_mine] ];
         int maxi = -1;
         int pos = -1;
         for(auto e:vec){
             if(vec[e]>=upper || vec[e]>maxi){
                 maxi = vec[e];
                 pos = e;
-                
             }
         }
         
         if(max_dist<maxi){
             max_dist = maxi;
-            max_ind = pii(zip[mine],pos);
+            max_ind = pii(zip[raw_mine],pos);
         }
     }
     return max_ind;
 }
 
+
+bool reflesh(const int &num_of_punter, map<Edge, int> &edge2punter, set<Edge> &edges_unused, map<int,int> &zip){
+    int punter_id, u, v;
+    if( !(cin>>punter_id>>u>>v) || punter_id==-1 )return false;
+    
+    rep(i,num_of_punter){
+        if(i)cin>>punter_id>>u>>v;
+        
+        assert((u == -1 && v == -1) || (u != -1 && v != -1));
+        if (u == -1 && v == -1) continue;
+        
+        u = zip[u];
+        v = zip[v];
+        if (u >= v) swap(u, v);
+        edge2punter[make_pair(u, v)] = punter_id;
+        
+        assert(edges_unused.count(make_pair(u, v)) == 1);
+        edges_unused.erase(make_pair(u, v));
+    }
+    
+    return true;
+}
+
+
 int main() {
-    vector<int> sites; // 入力の通りの SiteId
-    vector<int> mines;
-    map<int,int> zip;
+    vector<int> raw_sites, raw_mines;
+    map<int,int> zip, unzip;
     set<Edge> edges_unused;
+    map<Edge, int> edge2punter;
     int num_of_punter, my_punter_id;
     
-    setup(num_of_punter, my_punter_id, sites, zip, mines, edges_unused);
+    setup(num_of_punter, my_punter_id, raw_sites, zip, unzip, raw_mines, edges_unused);
     
     vector<vector<int>> ds(G.size(),vector<int>(0));
     rep(i,G.size()){
         ds[i] = shortestDistanceOne(i);
     }
     
-    pii land_set = get_fartherst_set(ds,mines,zip, G.size()/3);
-    int S = zip[land_set.first ];
-    int T = zip[land_set.second];
+    pii site_set = get_fartherst_set(ds,raw_mines,zip, G.size()/3);
+    int S = site_set.first;
+    int T = site_set.second;
     
-    int cur = S;
-    int dir = ds[S][T];
+    stack<int> went;
+    went.push(S);
     
-    int punter_id, u, v;
-    while (cin >> punter_id >> u >> v, punter_id != -1) {
-        // ターンの差分を受け取って更新
-        rep(i, num_of_punter) {
-            if (i != 0) cin >> punter_id >> u >> v;
-            
-            assert((u == -1 && v == -1) || (u != -1 && v != -1));
-            if (u == -1 && v == -1) continue;
-            
-            u = zip[u];
-            v = zip[v];
-            if (u >= v) swap(u, v);
-            edge2punter[make_pair(u, v)] = punter_id;
-            
-            assert(edges_unused.count(make_pair(u, v)) == 1);
-            edges_unused.erase(make_pair(u, v));
-        }
+    while(1){
+        bool res = reflesh(num_of_punter, edge2punter, edges_unused, zip);
         
-        auto response = [&](int u, int v){cout<<my_punter_id<<" "<<u<<" "<<v<<endl;};
+        if( res==false )break;
         
-        if(dir==0){
-            pii res = *prev(edges_unused.end());
-            response(res.first, res.second);
-            edges_unused.erase( prev(edges_unused.end()) );
-        }else{
+        
+        auto response = [&](int u, int v){cout<<my_punter_id<<" "<<unzip[u]<<" "<<unzip[v]<<endl;};
+        
+        bool printed = false;
+        while( went.size() ){
+            int cur = went.top();
+            int cand = -1;
+            int mini = INF;
             for(auto e:G[cur]){
-                if(ds[T][e]==T-1){
-                    response(min(cur,e), max(cur,e));
-                    edges_unused.erase(make_pair(min(cur,e), max(cur,e)));
-                    cur = e;
-                    dir--;
-                    break;
+                if( mini>ds[T][e] &&  ds[T][e]<=ds[T][cur]+3){
+                    if( edges_unused.count(  make_pair(min(e,cur), max(e,cur)) ) == 0 )continue;
+                    cand = e;
+                    mini = ds[T][e];
                 }
             }
+            
+            if(cand==-1)went.pop();
+            else{
+                response(min(cand,cur), max(cand,cur));
+                went.push(cand);
+                printed = true;
+                break;
+            }
+        }
+        if( not printed ){
+            assert(edges_unused.size()>0);
+            pii res = *prev(edges_unused.end());
+            response(res.first, res.second);
         }
     }
 }
