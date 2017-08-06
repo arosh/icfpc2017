@@ -170,12 +170,29 @@ vector<vector<int>> calcDownwardsAll() {
     return downwards;
 }
 
-// スコアの増分が最大である辺を採用
+void answer(int my_punter_id, int u, int v) {
+    u = sites[u];
+    v = sites[v];
+    cout << my_punter_id << " " << u << " " << v << endl;
+}
+
+// 鉱山のうち、接続する辺が (次数) * EDGE_RATIO 本以上取られているものがあれば、その鉱山に隣接する辺を採用 
+// なければ、スコアの増分が最大である辺を採用
 // 複数ある場合、最短経路DAGにおいて自身から到達可能な頂点数が最大であるような頂点に向かう辺を採用
 void play(UnionFind& uf) {
     long long ma_score = 0ll;
     int ma_down = 0;
     int arg_u, arg_v;
+
+    for (auto u : mines) {
+        for (auto v : G[u]) {
+            Edge e(min(u, v), max(u, v));
+            if (edges_unused.count(e)) {
+                answer(my_punter_id, e.first, e.second);
+                return ;
+            }
+        }
+    }
 
     auto downwards = calcDownwardsAll();
 
@@ -234,7 +251,6 @@ void play(UnionFind& uf) {
     }
 
     if (ma_score > 0) {
-        uf.unite(arg_u, arg_v);
         arg_u = sites[arg_u];
         arg_v = sites[arg_v];
         cout << my_punter_id << " " << arg_u << " " << arg_v << endl;
@@ -248,7 +264,6 @@ void play(UnionFind& uf) {
     vector<Edge> edges_unused_vec(edges_unused.begin(), edges_unused.end());
     int u, v;
     tie(u, v) = edges_unused_vec[edge_id];
-    uf.unite(u, v);
     u = sites[u];
     v = sites[v];
     cout << my_punter_id << " " << u << " " << v << endl;
