@@ -87,10 +87,10 @@ public:
 
 int main() {
 
-    GameManager gm;
+    GameManager game_manager;
 
-    while (gm.update()) {
-        gm.play();
+    while (game_manager.update()) {
+        game_manager.play();
     }
 
 }
