@@ -10,6 +10,9 @@ import better_exceptions
 from model import *
 from online import getLogger, setup_model_to_stdin, pull_model_to_stdin, parse_output
 
+BUTTLE_TIMES = 1
+LOG_FILENAME = 'icfpc_log'
+
 class Server:
     def __init__(self, n, filename):
         with open(filename) as f:
@@ -83,7 +86,7 @@ def evaluate(server):
         assert len(scores) > 0
     return scores
 
-def run(filename, solvers):
+def run(filename, solvers, f):
     server = Server(len(solvers), filename)
     procs = []
     for i in range(len(solvers)):
@@ -97,9 +100,11 @@ def run(filename, solvers):
     for proc in itertools.islice(itertools.cycle(procs), len(setup_model.rivers)):
         _, pull_model = pull(server)
         pull_stdin = pull_model_to_stdin(pull_model)
+
         proc.stdin.write(pull_stdin.encode('ascii'))
         proc.stdin.flush()
         output = proc.stdout.readline()
+        f.write(output.decode('utf-8'))
         push(server, parse_output(output))
 
     for proc in procs:
@@ -113,13 +118,19 @@ def main(filename, solvers):
     shuffle = []
     for i, name in enumerate(solvers):
         shuffle.append((i, name))
-    for i in tqdm(range(60)):
+#    for i in tqdm(range(60)):
+    for i in range( BUTTLE_TIMES ):
+        f = open(LOG_FILENAME+str(i)+'.txt','w')
         random.shuffle(shuffle)
         names = [x[1] for x in shuffle]
-        scores = run(filename, names)
+        scores = run(filename, names, f)
         winnings[shuffle[scores.index(max(scores))][0]] += 1
+
+        for i in range(len(solvers)):
+            print (names[i] + ' : ' + str(scores[i])+'pt')
+
     for i in range(len(solvers)):
-        print(solvers[i], winnings[i] / 60)
+        print(solvers[i], winnings[i] / BUTTLE_TIMES)
 
 if __name__ == '__main__':
     random.seed(0)
