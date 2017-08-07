@@ -113,6 +113,14 @@ def run(filename, solvers, f):
 
     return evaluate(server)
 
+
+def write_names(f,names):
+    new_names = []
+    for name in names:
+        new_names.append( name.split('/')[0] )
+    f.write(' '.join(new_names)+'\n')
+
+
 def main(filename, solvers):
     winnings = [0] * len(solvers)
     shuffle = []
@@ -120,9 +128,12 @@ def main(filename, solvers):
         shuffle.append((i, name))
 #    for i in tqdm(range(60)):
     for i in range( BUTTLE_TIMES ):
-        f = open(LOG_FILENAME+str(i)+'.txt','w')
+        f = open('buttle_logs/'+LOG_FILENAME+str(i)+'.txt','w')
         random.shuffle(shuffle)
         names = [x[1] for x in shuffle]
+
+        write_names(f,names)
+
         scores = run(filename, names, f)
         winnings[shuffle[scores.index(max(scores))][0]] += 1
 
