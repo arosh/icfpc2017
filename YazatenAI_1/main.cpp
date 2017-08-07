@@ -140,7 +140,11 @@ Edge mp(int u, int v){ return Edge(min(u,v),max(u,v)); }
 
 int main() {
     int num_of_punter, my_punter_id;
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 6d6607c52267330874e9660c574ee256bc55167f
     vector<int> mines_deg;
 
     set<Edge> edges_unused;
@@ -151,8 +155,13 @@ int main() {
 
     int V,E;
     tie(V,E) = setup(num_of_punter, my_punter_id, zip, unzip, edges_unused, mines_deg);
+<<<<<<< HEAD
 
 
+=======
+    
+    
+>>>>>>> 6d6607c52267330874e9660c574ee256bc55167f
     vector<bool> visited(V,false);
     vector<vector<int>> ds(V,vector<int>(0));
 
@@ -161,8 +170,13 @@ int main() {
 
     int diameter = -1;
     rep(i,V) diameter = max( diameter, *max_element( all(ds[i]) ) );
+<<<<<<< HEAD
 
 
+=======
+    
+    
+>>>>>>> 6d6607c52267330874e9660c574ee256bc55167f
     pii site_set = get_fartherst_set(ds, diameter*2.0/3);
     int S = site_set.first;
     int T = site_set.second;
