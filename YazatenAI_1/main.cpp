@@ -20,15 +20,16 @@ using Graph = vector<vector<int>>;
 using Edge = pair<int,int>;
 
 Graph G;
+set<int> sites, mines;
 
 
 //各値の読み込み・前処理
-pii setup(int &num_of_punter, int &my_punter_id, set<int> &sites, set<int> &mines, map<int,int> &zip, map<int,int> &unzip, set<Edge> &edges_unused, vector<int> &mines_deg) {
+pii setup(int &num_of_punter, int &my_punter_id, map<int,int> &zip, map<int,int> &unzip, set<Edge> &edges_unused, vector<int> &mines_deg) {
     int V, M, E;
     cin >> num_of_punter >> my_punter_id >> V >> M >> E;
     
     vector<int> raw_sites(V), raw_mines(M);
-    mines_deg.resize(M,0);
+    mines_deg.resize(V,0);
     rep(i, V){
         cin >> raw_sites[i];
         assert( zip.count(raw_sites[i])==0 );
@@ -40,7 +41,9 @@ pii setup(int &num_of_punter, int &my_punter_id, set<int> &sites, set<int> &mine
     
     rep(i, M){
         cin >> raw_mines[i];
-        mines.insert( zip[raw_mines[i]] );
+
+        int res = zip[raw_mines[i]];
+        mines.insert( res );
     }
     
     G.resize(V);
@@ -59,6 +62,7 @@ pii setup(int &num_of_punter, int &my_punter_id, set<int> &sites, set<int> &mine
         if (u >= v) swap(u, v);
         edges_unused.emplace(u, v);
     }
+
     return pii(V,E);
 }
 
@@ -82,7 +86,7 @@ vector<int> shortestDistanceOne(int s) {
 
 
 //グラフ中でそれなりの長さが取れそうなパスの両端の頂点番号のペア(圧縮済)を返す
-pii get_fartherst_set(const vector<vector<int>> &ds, const set<int> &mines, const int &upper){
+pii get_fartherst_set(const vector<vector<int>> &ds, const int &upper){
     int max_dist = 0;
     pii max_ind = pii(0,0);
     
@@ -137,7 +141,6 @@ Edge mp(int u, int v){ return Edge(min(u,v),max(u,v)); }
 int main() {
     int num_of_punter, my_punter_id;
     
-    set<int> sites, mines;
     vector<int> mines_deg;
     
     set<Edge> edges_unused;
@@ -147,7 +150,7 @@ int main() {
     
     
     int V,E;
-    tie(V,E) = setup(num_of_punter, my_punter_id, sites, mines, zip, unzip, edges_unused, mines_deg);
+    tie(V,E) = setup(num_of_punter, my_punter_id, zip, unzip, edges_unused, mines_deg);
     
     
     vector<bool> visited(V,false);
@@ -160,7 +163,7 @@ int main() {
     rep(i,V) diameter = max( diameter, *max_element( all(ds[i]) ) );
     
     
-    pii site_set = get_fartherst_set(ds, mines, diameter*2.0/3);
+    pii site_set = get_fartherst_set(ds, diameter*2.0/3);
     int S = site_set.first;
     int T = site_set.second;
     
@@ -179,7 +182,7 @@ int main() {
         //答えを出力する関数
         auto response = [&](int u, int v){
             assert( edges_unused.count( mp(u,v) ) );
-//            assert( not (visited[u]==true && visited[v]==true) );
+            //            assert( not (visited[u]==true && visited[v]==true) );
             visited[u] = visited[v] = true;
             cout<<my_punter_id<<" "<<unzip[u]<<" "<<unzip[v]<<endl;
         };
